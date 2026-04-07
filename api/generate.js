@@ -2,7 +2,7 @@ import OpenAI from "openai";
 
 const client = new OpenAI({
   apiKey: process.env.XAI_API_KEY,
-  baseURL: "https://api.x.ai/v1/responses",
+  baseURL: "https://api.x.ai/v1",
 });
 
 function safeParseJson(text) {
@@ -155,7 +155,7 @@ ${JSON.stringify(profile, null, 2)}
 `;
 
     const response = await client.responses.create({
-      model: process.env.XAI_MODEL || "grok-4.20-reasoning",
+      model: "grok-4.20-reasoning",
       input: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -179,7 +179,7 @@ ${JSON.stringify(profile, null, 2)}
       variants: parsed.variants.slice(0, 3),
       meta: {
         prompt,
-        model: process.env.XAI_MODEL || "grok-4.20-reasoning",
+        model: "grok-4.20-reasoning",
       },
     });
   } catch (error) {
