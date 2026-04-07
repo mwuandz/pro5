@@ -1,13 +1,8 @@
 {
-  "name": "ai-bio-studio-vercel-ready",
-  "version": "1.0.0",
+  "name": "ai-bio-studio",
   "private": true,
-  "description": "AI portfolio website builder prepared for Vercel deployment.",
-  "engines": {
-    "node": "22.x"
-  },
-  "scripts": {
-    "dev": "vercel dev"
-  },
-  "license": "UNLICENSED"
+  "type": "module",
+  "dependencies": {
+    "openai": "^4.0.0"
+  }
 }
