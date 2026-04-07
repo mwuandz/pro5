@@ -34,37 +34,34 @@ function fallbackTemplates(prompt = "") {
           accent: "#2563eb",
           background: "#ffffff",
           surface: "#f8fafc",
-          text: "#111827",
+          text: "#111827"
         },
         sections: ["hero", "about", "skills", "projects", "contact"],
         copy: {
           headline: "Xin chào, tôi là Nguyễn Văn A",
           subheadline: "Tôi xây dựng sản phẩm số hiện đại và dễ dùng.",
-          about: "Mẫu dự phòng khi AI chưa phản hồi đúng định dạng.",
-        },
-      },
+          about: "Mẫu dự phòng khi AI chưa phản hồi đúng định dạng."
+        }
+      }
     ],
-    meta: { prompt, note: "fallback" },
+    meta: { prompt }
   };
 }
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({
-      ok: false,
-      error: "Method not allowed",
-    });
+    return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
   try {
-    const body = req.body || {};
-    const prompt = body.prompt || "";
-    const profile = body.profile || {};
+    console.log("generate called");
+
+    const { prompt = "", profile = {} } = req.body || {};
 
     if (!process.env.XAI_API_KEY) {
       return res.status(200).json({
         ...fallbackTemplates(prompt),
-        debug: "Missing XAI_API_KEY on Vercel",
+        debug: "Missing XAI_API_KEY"
       });
     }
 
@@ -72,6 +69,7 @@ export default async function handler(req, res) {
 Bạn là AI tạo template website giới thiệu bản thân.
 Hãy trả về đúng 3 mẫu dưới dạng JSON hợp lệ.
 Không dùng markdown.
+
 Schema:
 {
   "variants": [
@@ -108,9 +106,11 @@ ${JSON.stringify(profile, null, 2)}
       model: "grok-4.20-reasoning",
       input: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
+        { role: "user", content: userPrompt }
+      ]
     });
+
+    console.log("xai response received");
 
     const text =
       response.output_text ||
@@ -126,8 +126,8 @@ ${JSON.stringify(profile, null, 2)}
     if (!parsed || !Array.isArray(parsed.variants)) {
       return res.status(200).json({
         ...fallbackTemplates(prompt),
-        debug: "Model returned non-JSON or unexpected schema",
-        raw: text?.slice(0, 2000),
+        debug: "Invalid model output",
+        raw: text.slice(0, 1500)
       });
     }
 
@@ -137,16 +137,15 @@ ${JSON.stringify(profile, null, 2)}
       variants: parsed.variants.slice(0, 3),
       meta: {
         prompt,
-        model: "grok-4.20-reasoning",
-      },
+        model: "grok-4.20-reasoning"
+      }
     });
   } catch (error) {
-    return res.status(200).json({
-      ...fallbackTemplates(req.body?.prompt || ""),
-      debug: "Server exception",
-      error: error?.message || "Unknown error",
-      stack:
-        process.env.NODE_ENV === "development" ? error?.stack : undefined,
+    console.error("generate error:", error);
+
+    return res.status(500).json({
+      ok: false,
+      error: error?.message || "Unknown server error"
     });
   }
 }
