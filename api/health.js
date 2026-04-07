@@ -6,6 +6,6 @@ module.exports = async (req, res) => {
   return res.status(200).json({
     ok: true,
     configured: Boolean(process.env.XAI_API_KEY),
-    model: process.env.OPENAI_MODEL || 'grok-4.20-reasoning',
+    model: process.env.XAI_MODEL || "grok-4.20-reasoning",
   });
 };
