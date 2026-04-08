@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -1837,7 +1836,7 @@
 
               <div class="field-group">
                 <button class="button" id="generateAiBtn" type="button">Tạo 3 mẫu bằng AI</button>
-                <div class="hint" id="aiRuntimeStatus" style="margin-top:10px;">AI thật sẽ chạy qua backend server-side. Hãy cấu hình OPENAI_API_KEY để bật tính năng này.</div>
+                <div class="hint" id="aiRuntimeStatus" style="margin-top:10px;">AI thật sẽ chạy qua backend server-side. Hãy cấu hình XAI_API_KEY để bật tính năng này.</div>
               </div>
 
               <div class="ai-suggestions" id="aiSuggestions"></div>
@@ -2069,7 +2068,7 @@
     </section>
 
     <footer class="wrap footer">
-      <div>AI Bio Studio • Full-stack demo • Builder + OpenAI backend + preview + export HTML</div>
+      <div>AI Bio Studio • Full-stack demo • Builder + xAI backend + preview + export HTML</div>
     </footer>
   </main>
 
@@ -2490,17 +2489,32 @@
       const fallbackSuggestions = generateLocalSuggestions();
       const persona = payload?.persona || detectPersona(state.aiPrompt, state.aiPersona);
       const style = payload?.style || detectStyle(state.aiPrompt, state.aiStyle);
-      const rawSuggestions = Array.isArray(payload?.suggestions) ? payload.suggestions.slice(0, 3) : [];
+      const rawSuggestions = Array.isArray(payload?.suggestions)
+        ? payload.suggestions.slice(0, 3)
+        : Array.isArray(payload?.variants)
+          ? payload.variants.slice(0, 3)
+          : [];
 
       const suggestions = rawSuggestions.map((raw, index) => {
-        const template = templateLibrary[raw?.templateId] || templateLibrary[fallbackSuggestions[index]?.templateId] || templateLibrary.dark;
+        const template =
+          templateLibrary[raw?.templateId] ||
+          templateLibrary[fallbackSuggestions[index]?.templateId] ||
+          templateLibrary.dark;
+
         const fallbackSuggestion = fallbackSuggestions[index] || fallbackSuggestions[0];
-        const rawSections = Array.isArray(raw?.sections) ? raw.sections.filter(section => allowedSections.includes(section)) : [];
-        const sections = rawSections.length ? rawSections : (fallbackSuggestion?.sections || template.sectionOrder);
+        const rawSections = Array.isArray(raw?.sections)
+          ? raw.sections.filter(section => allowedSections.includes(section))
+          : [];
+        const sections = rawSections.length
+          ? rawSections
+          : (fallbackSuggestion?.sections || template.sectionOrder);
+
         const badges = Array.isArray(raw?.badges) && raw.badges.length
           ? raw.badges.map(item => String(item).trim()).filter(Boolean).slice(0, 6)
           : buildSectionBadges(sections);
-        const fallbackCopy = fallbackSuggestion?.copy || buildGeneratedCopy(persona, style, state.aiPrompt);
+
+        const fallbackCopy =
+          fallbackSuggestion?.copy || buildGeneratedCopy(persona, style, state.aiPrompt);
 
         return {
           id: raw?.id || "ai-suggestion-" + index,
@@ -2508,25 +2522,43 @@
           persona,
           style,
           palette: {
-            bg: normalizeHexColor(raw?.palette?.bg, template.palette.bg),
+            bg: normalizeHexColor(raw?.palette?.bg || raw?.palette?.background, template.palette.bg),
             surface: normalizeHexColor(raw?.palette?.surface, template.palette.surface),
             primary: normalizeHexColor(raw?.palette?.primary, template.palette.primary),
             accent: normalizeHexColor(raw?.palette?.accent, template.palette.accent)
           },
-          reason: String(raw?.reason || fallbackSuggestion?.reason || "Phù hợp với mô tả của bạn.").trim(),
-          title: String(raw?.title || template.name).trim(),
-          subTitle: String(raw?.subTitle || template.short).trim(),
+          reason: String(
+            raw?.reason || fallbackSuggestion?.reason || "Phù hợp với mô tả của bạn."
+          ).trim(),
+          title: String(raw?.title || raw?.name || template.name).trim(),
+          subTitle: String(raw?.subTitle || raw?.style || template.short).trim(),
           badges,
           sections,
           copy: {
-            name: String(raw?.copy?.name || state.content.name || fallbackCopy.name || "Ales Trần").trim(),
-            title: String(raw?.copy?.title || state.content.title || fallbackCopy.title || "Product Builder").trim(),
-            tagline: String(raw?.copy?.tagline || fallbackCopy.tagline || "").trim(),
-            bio: String(raw?.copy?.bio || fallbackCopy.bio || "").trim(),
-            ctaText: String(raw?.copy?.ctaText || state.content.ctaText || fallbackCopy.ctaText || "Xem thêm").trim(),
-            skillsText: String(raw?.copy?.skillsText || state.content.skillsText || fallbackCopy.skillsText || "").trim(),
-            projectsText: String(raw?.copy?.projectsText || state.content.projectsText || fallbackCopy.projectsText || "").trim(),
-            experienceText: String(raw?.copy?.experienceText || state.content.experienceText || fallbackCopy.experienceText || "").trim()
+            name: String(
+              raw?.copy?.name || state.content.name || fallbackCopy.name || "Ales Trần"
+            ).trim(),
+            title: String(
+              raw?.copy?.title || state.content.title || fallbackCopy.title || "Product Builder"
+            ).trim(),
+            tagline: String(
+              raw?.copy?.tagline || raw?.copy?.subheadline || fallbackCopy.tagline || ""
+            ).trim(),
+            bio: String(
+              raw?.copy?.bio || raw?.copy?.about || fallbackCopy.bio || ""
+            ).trim(),
+            ctaText: String(
+              raw?.copy?.ctaText || state.content.ctaText || fallbackCopy.ctaText || "Xem thêm"
+            ).trim(),
+            skillsText: String(
+              raw?.copy?.skillsText || state.content.skillsText || fallbackCopy.skillsText || ""
+            ).trim(),
+            projectsText: String(
+              raw?.copy?.projectsText || state.content.projectsText || fallbackCopy.projectsText || ""
+            ).trim(),
+            experienceText: String(
+              raw?.copy?.experienceText || state.content.experienceText || fallbackCopy.experienceText || ""
+            ).trim()
           }
         };
       });
@@ -2557,16 +2589,32 @@
 
     async function checkAiHealth() {
       try {
-        const response = await fetch("/api/health", { headers: { "Accept": "application/json" } });
-        if (!response.ok) throw new Error("Không đọc được trạng thái AI backend.");
+        const response = await fetch("/api/health", {
+          headers: { "Accept": "application/json" }
+        });
+
+        if (!response.ok) {
+          throw new Error("Không đọc được trạng thái AI backend.");
+        }
+
         const data = await response.json();
-        if (data?.configured) {
-          updateAiRuntimeStatus("success", "Backend AI đã sẵn sàng" + (data.model ? " • " + data.model : "") + ".");
+
+        if (data?.hasApiKey) {
+          updateAiRuntimeStatus(
+            "success",
+            "Backend AI đã sẵn sàng" + (data.model ? " • " + data.model : "") + "."
+          );
         } else {
-          updateAiRuntimeStatus("warning", "Chưa cấu hình OPENAI_API_KEY. Khi bấm nút AI, hệ thống sẽ fallback sang gợi ý local demo.");
+          updateAiRuntimeStatus(
+            "warning",
+            "Chưa cấu hình XAI_API_KEY. Khi bấm nút AI, hệ thống sẽ fallback sang gợi ý local demo."
+          );
         }
       } catch (error) {
-        updateAiRuntimeStatus("warning", "Không kiểm tra được backend AI. Hệ thống sẽ fallback sang gợi ý local nếu cần.");
+        updateAiRuntimeStatus(
+          "warning",
+          "Không kiểm tra được backend AI. Hệ thống sẽ fallback sang gợi ý local nếu cần."
+        );
       }
     }
 
@@ -2585,14 +2633,34 @@
         })
       });
 
-      const data = await response.json().catch(() => ({}));
+      const text = await response.text();
+      let data = {};
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Server không trả JSON hợp lệ.");
+      }
+
       if (!response.ok) {
         throw new Error(data?.error || "Không gọi được AI backend.");
       }
-      if (!data || !Array.isArray(data.suggestions) || !data.suggestions.length) {
+
+      if (
+        !data ||
+        ((!Array.isArray(data.suggestions) || !data.suggestions.length) &&
+         (!Array.isArray(data.variants) || !data.variants.length))
+      ) {
         throw new Error("AI không trả về gợi ý hợp lệ.");
       }
-      return data;
+
+      return {
+        ...data,
+        suggestions:
+          Array.isArray(data.suggestions) && data.suggestions.length
+            ? data.suggestions
+            : data.variants
+      };
     }
 
     function applyPersonaDefaults(persona, keepIdentity = false) {
@@ -2967,7 +3035,6 @@
       const projects = splitProjects(state.content.projectsText);
       const experiences = splitExperiences(state.content.experienceText);
       const avatar = getInitials(state.content.name);
-      const portfolioPath = slugify(state.content.name || "portfolio");
       const exportStats = [
         { value: skills.length || 0, label: "Kỹ năng" },
         { value: projects.length || 0, label: "Dự án" },
@@ -3335,8 +3402,7 @@
         els.accentColor, els.backgroundColor, els.surfaceColor, els.radiusRange,
         els.toggleAbout, els.toggleSkills, els.toggleProjects, els.toggleExperience, els.toggleContact
       ].forEach(element => {
-        const eventName = element.type === "checkbox" || element.tagName === "SELECT" || element.type === "color" || element.type === "range" ? "input" : "input";
-        element.addEventListener(eventName, updateStateFromForm);
+        element.addEventListener("input", updateStateFromForm);
       });
 
       document.querySelectorAll(".mode-switch button").forEach(button => {
