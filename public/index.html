@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Site Forge - Builder website cá nhân mức 3</title>
+  <meta name="description" content="AI sinh layout block-tree cho website giới thiệu bản thân, không còn phụ thuộc template cứng." />
+  <style>
+    :root {
+      --bg: #09111f;
+      --surface: rgba(16, 24, 42, 0.86);
+      --surface-2: rgba(255,255,255,0.04);
+      --text: #eef4ff;
+      --muted: #9db1d2;
+      --primary: #7c3aed;
+      --accent: #38bdf8;
+      --border: rgba(255,255,255,0.08);
+      --radius: 22px;
+      --shadow: 0 24px 60px rgba(0,0,0,.35);
+      --max: 1280px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(124,58,237,.2), transparent 24%),
+        radial-gradient(circle at top right, rgba(56,189,248,.15), transparent 26%),
+        linear-gradient(180deg, #070d17 0%, #09111f 100%);
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+    .wrap { width: min(var(--max), calc(100% - 28px)); margin: 0 auto; }
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(8, 12, 24, .78);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+    }
+    .topbar-inner {
+      min-height: 70px;
+      display: flex; align-items: center; justify-content: space-between; gap: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; }
+    .brand-mark {
+      width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      box-shadow: 0 12px 24px rgba(124,58,237,.3);
+    }
+    .nav { display: flex; gap: 18px; color: var(--muted); font-size: 14px; }
+    .nav a:hover { color: var(--text); }
+    .button, .ghost {
+      min-height: 46px; border-radius: 14px; padding: 0 18px; border: 0; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      transition: .18s ease;
+    }
+    .button {
+      background: linear-gradient(135deg, var(--primary), #5b9cff);
+      color: white; font-weight: 700;
+      box-shadow: 0 16px 28px rgba(91, 108, 255, .24);
+    }
+    .ghost {
+      background: rgba(255,255,255,.04); color: var(--text); border: 1px solid var(--border);
+    }
+    .button:hover, .ghost:hover { transform: translateY(-1px); }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px;
+      background: rgba(124,58,237,.12); color: #ddd2ff; border: 1px solid rgba(124,58,237,.22);
+      font-size: 13px; font-weight: 700;
+    }
+    .eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: linear-gradient(135deg,var(--primary),var(--accent)); }
+    .hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: 34px; align-items: center; padding: 64px 0 32px; }
+    .hero h1 { font-size: clamp(2.2rem, 4vw, 4.6rem); line-height: 1.02; margin: 16px 0; letter-spacing: -.03em; }
+    .hero p { margin: 0; color: var(--muted); font-size: 18px; max-width: 720px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+    .hero-points { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; list-style: none; margin: 24px 0 0; }
+    .hero-points li { padding: 10px 14px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+    .showcase {
+      border-radius: 28px; border: 1px solid var(--border); padding: 18px;
+      background: linear-gradient(180deg, rgba(17,26,45,.94), rgba(8,13,22,.92)); box-shadow: var(--shadow);
+    }
+    .mini-browser { border-radius: 24px; border: 1px solid var(--border); overflow: hidden; background: rgba(255,255,255,.03); }
+    .mini-toolbar { display: flex; gap: 10px; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .mini-dots { display: flex; gap: 7px; }
+    .mini-dots span { width: 10px; height: 10px; border-radius: 999px; display: block; }
+    .mini-dots span:nth-child(1){background:#fb7185}.mini-dots span:nth-child(2){background:#fbbf24}.mini-dots span:nth-child(3){background:#4ade80}
+    .mini-url { flex: 1; min-height: 34px; border-radius: 999px; display: flex; align-items: center; padding: 0 14px; background: rgba(255,255,255,.04); color: var(--muted); font-size: 12px; }
+    .mock { padding: 18px; display: grid; gap: 14px; }
+    .mock-hero, .mock-row { display: grid; gap: 14px; }
+    .mock-hero { grid-template-columns: 1fr 170px; }
+    .mock-card { border-radius: 24px; padding: 18px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); }
+    .mock-gradient { background: radial-gradient(circle at top right, rgba(56,189,248,.18), transparent 30%), radial-gradient(circle at left, rgba(124,58,237,.22), transparent 36%), rgba(255,255,255,.04); }
+    .line { height: 11px; border-radius: 999px; background: rgba(255,255,255,.08); margin-top: 10px; }
+    .line.short { width: 48%; } .line.medium { width: 66%; } .line.long { width: 90%; }
+    .avatar { width: 100%; aspect-ratio: 1/1; display: grid; place-items: center; border-radius: 24px; font-size: 42px; font-weight: 800; color: rgba(255,255,255,.9); background: linear-gradient(135deg, rgba(124,58,237,.48), rgba(56,189,248,.4)); }
+    .mock-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .section { padding: 32px 0; }
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 20px; }
+    .section-head h2 { margin: 10px 0 0; font-size: clamp(1.8rem, 2.5vw, 3rem); line-height: 1.08; }
+    .section-head p { margin: 0; color: var(--muted); max-width: 720px; }
+    .feature-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .card { background: linear-gradient(180deg, rgba(18, 27, 46, .86), rgba(10,16,28,.82)); border: 1px solid var(--border); border-radius: 24px; padding: 22px; box-shadow: var(--shadow); }
+    .feature-icon { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 18px; background: linear-gradient(135deg, rgba(124,58,237,.24), rgba(56,189,248,.18)); border: 1px solid var(--border); font-size: 22px; }
+    .card h3 { margin: 14px 0 8px; font-size: 18px; }
+    .card p { margin: 0; color: var(--muted); font-size: 14px; }
+    .builder { border-radius: 30px; padding: 18px; background: linear-gradient(180deg, rgba(17,26,45,.94), rgba(8,13,22,.9)); border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .builder-head { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 8px 8px 18px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+    .builder-head h3 { margin: 6px 0; font-size: 28px; }
+    .builder-head p { margin: 0; color: var(--muted); max-width: 760px; font-size: 14px; }
+    .builder-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .builder-grid { display: grid; grid-template-columns: 430px minmax(0, 1fr); gap: 18px; }
+    .panel { border-radius: 28px; background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); border: 1px solid var(--border); overflow: hidden; }
+    .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 14px; border-bottom: 1px solid var(--border); }
+    .tab-btn { min-height: 42px; border-radius: 14px; border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; font-weight: 700; }
+    .tab-btn.active { background: rgba(124,58,237,.14); color: white; border-color: rgba(124,58,237,.24); }
+    .tab-panel { display: none; padding: 18px; }
+    .tab-panel.active { display: block; }
+    .subhead { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .subhead h4 { margin: 0; font-size: 15px; }
+    .subhead span { color: var(--muted); font-size: 12px; }
+    .field { margin-bottom: 14px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+    label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 700; color: #dbe7ff; }
+    input[type="text"], input[type="email"], input[type="url"], input[type="tel"], textarea, select, input[type="color"] {
+      width: 100%; min-height: 46px; border-radius: 14px; border: 1px solid var(--border);
+      background: rgba(255,255,255,.04); color: var(--text); padding: 12px 14px; outline: none;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    .hint { margin-top: 8px; font-size: 12px; color: var(--muted); }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+    .chip { padding: 10px 14px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255,255,255,.03); color: var(--text); cursor: pointer; }
+    .chip:hover { background: rgba(124,58,237,.14); }
+    .concepts { display: grid; gap: 14px; margin-top: 16px; }
+    .concept-card { padding: 16px; border-radius: 20px; background: rgba(255,255,255,.03); border: 1px solid var(--border); }
+    .concept-top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+    .concept-title strong { font-size: 16px; }
+    .concept-title span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .swatches { display: flex; gap: 8px; }
+    .swatches span { width: 18px; height: 18px; border-radius: 999px; border: 2px solid rgba(255,255,255,.14); }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .badge { padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); font-size: 12px; color: var(--muted); }
+    .layout-list { display: grid; gap: 10px; }
+    .layout-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,.035); border: 1px solid var(--border); }
+    .layout-item strong { font-size: 14px; }
+    .layout-item span { color: var(--muted); font-size: 12px; }
+    .layout-actions { display: flex; gap: 8px; }
+    .icon-btn { min-width: 38px; min-height: 38px; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,.04); color: var(--text); cursor: pointer; }
+    .toggle-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+    .toggle { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.035); border: 1px solid var(--border); }
+    .preview-panel { padding: 14px; }
+    .preview-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; padding: 0 6px; }
+    .preview-head strong { font-size: 15px; }
+    .mode-switch { display: inline-flex; gap: 6px; padding: 6px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid var(--border); }
+    .mode-switch button { min-height: 36px; padding: 0 14px; border-radius: 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-weight: 700; }
+    .mode-switch button.active { background: rgba(124,58,237,.14); color: white; }
+    .preview-badge { padding: 8px 12px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); background: rgba(255,255,255,.04); }
+    .preview-frame { width: 100%; margin: 0 auto; transition: width .2s ease; }
+    .preview-frame.mobile { width: min(430px, 100%); }
+    .browser-shell { border-radius: 28px; overflow: hidden; background: #0b1220; border: 1px solid var(--border); box-shadow: 0 22px 50px rgba(0,0,0,.36); }
+    .browser-toolbar { padding: 14px 16px; background: rgba(255,255,255,.04); border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
+    .browser-toolbar .url { flex: 1; min-height: 38px; border-radius: 999px; display: flex; align-items: center; padding: 0 14px; background: rgba(255,255,255,.04); color: var(--muted); font-size: 12px; border: 1px solid rgba(255,255,255,.06); }
+    #previewRoot { min-height: 880px; }
+    .site { --site-primary:#7c3aed; --site-accent:#38bdf8; --site-bg:#07111f; --site-surface:#10192f; --site-text:#eef4ff; --site-muted:#9db1d2; --site-radius:24px;
+      background: radial-gradient(circle at top left, color-mix(in srgb, var(--site-primary) 18%, transparent), transparent 30%), radial-gradient(circle at top right, color-mix(in srgb, var(--site-accent) 16%, transparent), transparent 30%), linear-gradient(180deg, color-mix(in srgb, var(--site-bg) 86%, black), var(--site-bg));
+      color: var(--site-text); min-height: 100%; padding: 26px; }
+    .site-wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 18px; }
+    .site-box { border-radius: var(--site-radius); border: 1px solid color-mix(in srgb, var(--site-text) 8%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--site-surface) 94%, transparent), color-mix(in srgb, var(--site-surface) 84%, transparent)); backdrop-filter: blur(18px); box-shadow: 0 18px 40px rgba(0,0,0,.22); }
+    .hero-block.split { display: grid; grid-template-columns: 1.05fr 300px; gap: 20px; padding: 28px; }
+    .hero-block.centered { padding: 36px 28px; text-align: center; }
+    .hero-block.spotlight { padding: 32px 28px; position: relative; overflow: hidden; }
+    .hero-block.spotlight::after { content:""; position:absolute; right:-60px; top:-60px; width:220px; height:220px; border-radius:999px; background: linear-gradient(135deg, color-mix(in srgb, var(--site-primary) 75%, white), color-mix(in srgb, var(--site-accent) 70%, white)); filter: blur(50px); opacity:.35; }
+    .pill { display:inline-flex; align-items:center; gap:8px; padding: 8px 12px; border-radius:999px; background: color-mix(in srgb, var(--site-primary) 14%, transparent); color:white; font-size:12px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; }
+    .pill::before { content:""; width:8px; height:8px; border-radius:999px; background: linear-gradient(135deg,var(--site-primary),var(--site-accent)); }
+    .site h1 { margin: 16px 0 10px; font-size: clamp(2rem, 4vw, 3.8rem); line-height: .98; letter-spacing: -.03em; }
+    .site-title { color: var(--site-accent); font-weight: 700; font-size: 17px; margin-bottom: 10px; }
+    .site-muted { color: var(--site-muted); }
+    .chip-row { display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 0; }
+    .chip-row span, .skill-pill, .meta-pill { padding: 10px 12px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid color-mix(in srgb, var(--site-text) 8%, transparent); font-size: 13px; color: var(--site-muted); }
+    .cta-row { display:flex; flex-wrap:wrap; gap:12px; margin-top:18px; }
+    .cta-primary, .cta-secondary { min-height: 44px; padding: 0 18px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+    .cta-primary { color: white; background: linear-gradient(135deg, var(--site-primary), color-mix(in srgb, var(--site-accent) 66%, white)); box-shadow: 0 14px 28px color-mix(in srgb, var(--site-primary) 28%, transparent); }
+    .cta-secondary { background: rgba(255,255,255,.04); border: 1px solid color-mix(in srgb, var(--site-text) 8%, transparent); }
+    .profile-card { display:grid; gap: 14px; padding: 22px; border-radius: calc(var(--site-radius) - 4px); background: radial-gradient(circle at top right, color-mix(in srgb, var(--site-accent) 20%, transparent), transparent 30%), radial-gradient(circle at center, color-mix(in srgb, var(--site-primary) 16%, transparent), transparent 40%), rgba(255,255,255,.03); border: 1px solid color-mix(in srgb, var(--site-text) 8%, transparent); }
+    .avatar-lg { width: 86px; height: 86px; border-radius: 22px; display:grid; place-items:center; font-size:30px; font-weight:800; color:white; background: linear-gradient(135deg, var(--site-primary), var(--site-accent)); }
+    .profile-lines { display:grid; gap:10px; font-size: 13px; color: var(--site-muted); }
+    .stats-grid { display:grid; gap: 16px; }
+    .stats-grid.grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    .stats-grid.strip { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    .stat-card { padding: 18px; border-radius: var(--site-radius); border: 1px solid color-mix(in srgb, var(--site-text) 8%, transparent); background: rgba(255,255,255,.03); }
+    .stat-card strong { display:block; font-size: 30px; margin-bottom: 8px; }
+    .content-block { padding: 22px; }
+    .block-head { display:flex; justify-content: space-between; gap: 10px; align-items: end; margin-bottom: 16px; }
+    .block-head h3 { margin: 0; font-size: 22px; }
+    .block-head p { margin: 0; color: var(--site-muted); font-size: 14px; }
+    .about-card p, .about-split p { color: var(--site-muted); margin: 0; }
+    .about-split { display:grid; grid-template-columns: 1.1fr .9fr; gap: 18px; }
+    .skills-pills, .contact-links, .socials { display:flex; flex-wrap:wrap; gap:10px; }
+    .skills-grid { display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+    .skills-grid .skill-pill { border-radius: 16px; }
+    .projects-cards, .projects-showcase, .testimonials-cards { display:grid; gap: 16px; }
+    .projects-cards { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    .projects-showcase { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .project-card, .testimonial-card, .exp-card { padding: 18px; border-radius: calc(var(--site-radius) - 4px); border: 1px solid color-mix(in srgb, var(--site-text) 8%, transparent); background: rgba(255,255,255,.03); display:grid; gap:10px; }
+    .project-card h4, .testimonial-card h4, .exp-card h4 { margin:0; font-size:17px; }
+    .project-card p, .testimonial-card p, .exp-card p { margin:0; color: var(--site-muted); font-size: 14px; }
+    .project-card a { color: var(--site-accent); font-size: 13px; font-weight: 700; }
+    .experience-timeline { display:grid; gap: 12px; }
+    .timeline-item { display:grid; grid-template-columns: 120px 1fr; gap: 14px; padding: 14px 0; border-bottom: 1px solid color-mix(in srgb, var(--site-text) 8%, transparent); }
+    .timeline-item:last-child { border-bottom: 0; }
+    .contact-cta { display:grid; grid-template-columns: 1fr auto; gap: 16px; align-items:center; }
+    .contact-split { display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .footer-note { text-align: center; color: var(--muted); font-size: 13px; padding-bottom: 40px; }
+    .toast { position: fixed; right: 18px; bottom: 18px; min-width: 260px; max-width: 420px; padding: 14px 16px; border-radius: 16px; background: rgba(10,17,32,.92); border: 1px solid var(--border); box-shadow: 0 18px 40px rgba(0,0,0,.28); transform: translateY(18px); opacity: 0; pointer-events: none; transition: .18s ease; z-index: 50; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    @media (max-width: 1180px) {
+      .hero, .builder-grid { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: repeat(2,1fr); }
+      .builder-head { flex-direction: column; align-items: start; }
+    }
+    @media (max-width: 860px) {
+      .nav { display:none; }
+      .hero { padding-top: 38px; }
+      .feature-grid, .tabs, .grid-2, .toggle-grid, .skills-grid, .projects-cards, .projects-showcase, .stats-grid.grid, .stats-grid.strip, .about-split, .hero-block.split, .contact-cta, .contact-split { grid-template-columns: 1fr; }
+      .mock-hero, .mock-grid { grid-template-columns: 1fr; }
+      .tabs { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 560px) {
+      .hero-actions, .builder-actions, .cta-row, .contact-links { flex-direction: column; align-items: stretch; }
+      .button, .ghost { width: 100%; }
+      .mode-switch { width: 100%; }
+      .mode-switch button { flex:1; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark">AI</span>
+        <span>AI Site Forge</span>
+      </a>
+      <nav class="nav">
+        <a href="#features">Tính năng</a>
+        <a href="#builder">Builder</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="button" href="#builder">Tạo web mới</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="wrap hero">
+      <div>
+        <span class="eyebrow">Mức 3 • AI sinh layout block tree</span>
+        <h1>Không chọn mẫu cứng nữa. AI tự tạo <span style="background:linear-gradient(135deg,var(--accent),#7b61ff);-webkit-background-clip:text;background-clip:text;color:transparent;">layout website cá nhân</span> từ prompt của bạn.</h1>
+        <p>Website này được dựng lại theo kiến trúc block-tree: AI trả về <strong>theme + layout + content</strong>, còn frontend render từ JSON. Bạn có thể áp dụng concept, đổi thứ tự block, chỉnh nội dung và xuất thành HTML hoàn chỉnh.</p>
+        <div class="hero-actions">
+          <a class="button" href="#builder">Bắt đầu tạo web</a>
+          <a class="ghost" href="#features">Xem logic mức 3</a>
+        </div>
+        <ul class="hero-points">
+          <li>AI sinh layout mới, không phụ thuộc template cố định</li>
+          <li>Block library với nhiều variant khác nhau</li>
+          <li>Preview realtime desktop/mobile</li>
+          <li>Xuất HTML portfolio dùng ngay</li>
+        </ul>
+      </div>
+
+      <div class="showcase" aria-hidden="true">
+        <div class="mini-browser">
+          <div class="mini-toolbar">
+            <div class="mini-dots"><span></span><span></span><span></span></div>
+            <div class="mini-url">https://ai-site-forge.demo/generate</div>
+          </div>
+          <div class="mock">
+            <div class="mock-hero">
+              <div class="mock-card mock-gradient">
+                <div style="font-size:12px;color:#cbd7f5;text-transform:uppercase;letter-spacing:.12em;">Site Spec</div>
+                <div style="font-size:24px;font-weight:800;line-height:1.1;margin:10px 0;">AI tạo layout block-tree cho portfolio cá nhân</div>
+                <div class="line long"></div>
+                <div class="line medium"></div>
+                <div class="line short"></div>
+              </div>
+              <div class="mock-card"><div class="avatar">BT</div></div>
+            </div>
+            <div class="mock-grid">
+              <div class="mock-card"><div style="font-size:12px;color:#cbd7f5;">hero.split</div><div class="line medium"></div><div class="line long"></div></div>
+              <div class="mock-card"><div style="font-size:12px;color:#cbd7f5;">projects.cards</div><div class="line medium"></div><div class="line long"></div></div>
+              <div class="mock-card"><div style="font-size:12px;color:#cbd7f5;">contact.cta</div><div class="line medium"></div><div class="line long"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="wrap section">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Kiến trúc mới</span>
+          <h2>Từ template-driven sang schema-driven builder</h2>
+        </div>
+        <p>Ở bản này, AI không còn chọn một template cứng rồi đổi màu nữa. Thay vào đó, AI tạo ra một “site spec” gồm theme, content và danh sách block để frontend render trực tiếp.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="card"><div class="feature-icon">🧱</div><h3>Block tree</h3><p>Mỗi website là một mảng block như hero, stats, about, projects, contact với variant riêng.</p></article>
+        <article class="card"><div class="feature-icon">🎨</div><h3>Theme độc lập</h3><p>AI sinh bảng màu, radius và tone chữ riêng cho từng concept thay vì dùng palette cố định.</p></article>
+        <article class="card"><div class="feature-icon">🧠</div><h3>3 concept thật</h3><p>Mỗi prompt sẽ ra 3 concept layout khác nhau để bạn áp dụng hoặc chỉnh tiếp.</p></article>
+        <article class="card"><div class="feature-icon">⚙️</div><h3>Dễ mở rộng</h3><p>Bạn có thể thêm block mới, variant mới hoặc AI redesign dựa trên site spec hiện có.</p></article>
+      </div>
+    </section>
+
+    <section id="builder" class="wrap section">
+      <div class="builder">
+        <div class="builder-head">
+          <div>
+            <span class="eyebrow">AI Website Builder mức 3</span>
+            <h3>Tạo web mới bằng block-tree AI</h3>
+            <p>Nhập mô tả ở tab AI, nhận 3 concept, áp dụng một concept bạn thích, sau đó chỉnh Layout, Nội dung, Theme và xuất file HTML hoàn chỉnh.</p>
+          </div>
+          <div class="builder-actions">
+            <button class="ghost" id="saveBtn">Lưu nháp</button>
+            <button class="ghost" id="openBtn">Xem portfolio</button>
+            <button class="button" id="downloadBtn">Tải HTML</button>
+          </div>
+        </div>
+
+        <div class="builder-grid">
+          <section class="panel">
+            <div class="tabs">
+              <button class="tab-btn active" data-tab="ai" type="button">AI</button>
+              <button class="tab-btn" data-tab="layout" type="button">Layout</button>
+              <button class="tab-btn" data-tab="content" type="button">Nội dung</button>
+              <button class="tab-btn" data-tab="theme" type="button">Theme</button>
+            </div>
+
+            <div class="tab-panel active" data-panel="ai">
+              <div class="subhead"><h4>Mô tả website cần tạo</h4><span>AI sẽ trả 3 concept block-tree</span></div>
+              <div class="field">
+                <label for="prompt">Prompt mô tả</label>
+                <textarea id="prompt" placeholder="Ví dụ: Tạo website cá nhân cho frontend developer, tone dark hiện đại, có hero split, stats, dự án dạng showcase và contact CTA."></textarea>
+                <div class="hint">Mẹo: nêu rõ nghề nghiệp, tone màu, phong cách và các block bạn muốn có.</div>
+              </div>
+              <div class="grid-2">
+                <div class="field">
+                  <label for="persona">Persona</label>
+                  <select id="persona">
+                    <option value="auto">Tự nhận diện</option>
+                    <option value="developer">Developer</option>
+                    <option value="designer">Designer</option>
+                    <option value="freelancer">Freelancer</option>
+                    <option value="creator">Creator</option>
+                    <option value="student">Student</option>
+                    <option value="marketer">Marketer</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="style">Style</label>
+                  <select id="style">
+                    <option value="auto">Tự nhận diện</option>
+                    <option value="minimal">Minimal</option>
+                    <option value="dark">Dark</option>
+                    <option value="creative">Creative</option>
+                    <option value="elegant">Elegant</option>
+                    <option value="conversion">Conversion</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label>Prompt mẫu</label>
+                <div class="chips" id="promptChips">
+                  <button class="chip" type="button" data-prompt="Tạo website cá nhân cho frontend developer, tone dark hiện đại, có hero split, stats, dự án showcase và contact split.">Developer dark</button>
+                  <button class="chip" type="button" data-prompt="Tạo portfolio cho UI/UX Designer, sáng tạo, spotlight hero, projects dạng showcase và testimonials.">Designer creative</button>
+                  <button class="chip" type="button" data-prompt="Tạo website freelancer marketing với hero centered, stats strip, services-style projects cards và contact CTA mạnh.">Freelancer marketing</button>
+                </div>
+              </div>
+              <div class="field">
+                <button class="button" id="generateBtn" type="button">Tạo 3 concept bằng AI</button>
+                <div class="hint" id="runtimeStatus">AI thật sẽ gọi backend server-side. Hãy cấu hình XAI_API_KEY để bật chế độ online.</div>
+              </div>
+              <div class="concepts" id="concepts"></div>
+            </div>
+
+            <div class="tab-panel" data-panel="layout">
+              <div class="subhead"><h4>Layout hiện tại</h4><span>Kéo thứ tự bằng nút lên/xuống</span></div>
+              <div class="layout-list" id="layoutList"></div>
+              <div class="field" style="margin-top:16px;">
+                <label>Thêm block nhanh</label>
+                <div class="chips" id="blockChips"></div>
+              </div>
+            </div>
+
+            <div class="tab-panel" data-panel="content">
+              <div class="subhead"><h4>Nội dung website</h4><span>Sửa để cập nhật preview</span></div>
+              <div class="grid-2">
+                <div class="field"><label for="name">Họ và tên</label><input id="name" type="text" /></div>
+                <div class="field"><label for="title">Chức danh</label><input id="title" type="text" /></div>
+              </div>
+              <div class="grid-2">
+                <div class="field"><label for="tagline">Tagline</label><input id="tagline" type="text" /></div>
+                <div class="field"><label for="ctaText">Nút CTA</label><input id="ctaText" type="text" /></div>
+              </div>
+              <div class="grid-2">
+                <div class="field"><label for="email">Email</label><input id="email" type="email" /></div>
+                <div class="field"><label for="phone">Điện thoại</label><input id="phone" type="tel" /></div>
+              </div>
+              <div class="grid-2">
+                <div class="field"><label for="location">Địa điểm</label><input id="location" type="text" /></div>
+                <div class="field"><label for="website">Website</label><input id="website" type="url" /></div>
+              </div>
+              <div class="field"><label for="bio">Giới thiệu dài</label><textarea id="bio"></textarea></div>
+              <div class="field"><label for="skills">Kỹ năng</label><textarea id="skills"></textarea><div class="hint">Phân tách bằng dấu phẩy hoặc xuống dòng.</div></div>
+              <div class="field"><label for="projects">Dự án</label><textarea id="projects"></textarea><div class="hint">Mỗi dòng: Tên dự án | Mô tả | Link</div></div>
+              <div class="field"><label for="experience">Kinh nghiệm</label><textarea id="experience"></textarea><div class="hint">Mỗi dòng: Vai trò | Công ty | Thời gian | Mô tả</div></div>
+              <div class="field"><label for="testimonials">Testimonials</label><textarea id="testimonials"></textarea><div class="hint">Mỗi dòng: Quote | Tác giả | Vai trò</div></div>
+              <div class="field"><label for="stats">Stats</label><textarea id="stats"></textarea><div class="hint">Mỗi dòng: Giá trị | Nhãn</div></div>
+            </div>
+
+            <div class="tab-panel" data-panel="theme">
+              <div class="subhead"><h4>Theme hiện tại</h4><span>Chỉnh màu và bo góc</span></div>
+              <div class="grid-2">
+                <div class="field"><label for="primary">Màu chính</label><input id="primary" type="color" /></div>
+                <div class="field"><label for="accent">Màu phụ</label><input id="accent" type="color" /></div>
+              </div>
+              <div class="grid-2">
+                <div class="field"><label for="background">Màu nền</label><input id="background" type="color" /></div>
+                <div class="field"><label for="surface">Màu card</label><input id="surface" type="color" /></div>
+              </div>
+              <div class="grid-2">
+                <div class="field"><label for="textColor">Màu chữ</label><input id="textColor" type="color" /></div>
+                <div class="field"><label for="mutedColor">Màu phụ chữ</label><input id="mutedColor" type="color" /></div>
+              </div>
+              <div class="field">
+                <label for="radius">Bo góc</label>
+                <input id="radius" type="range" min="16" max="36" step="1" />
+                <div class="hint" id="radiusValue"></div>
+              </div>
+              <div class="field">
+                <label>Preset nhanh</label>
+                <div class="chips">
+                  <button class="chip preset" type="button" data-primary="#7c3aed" data-accent="#38bdf8" data-bg="#07111f" data-surface="#10192f" data-text="#eef4ff" data-muted="#9db1d2">Dark Tech</button>
+                  <button class="chip preset" type="button" data-primary="#4f46e5" data-accent="#06b6d4" data-bg="#f4f7fb" data-surface="#ffffff" data-text="#162033" data-muted="#5f6b84">Minimal Light</button>
+                  <button class="chip preset" type="button" data-primary="#ec4899" data-accent="#8b5cf6" data-bg="#170a24" data-surface="#261139" data-text="#fff4fb" data-muted="#d9bfd6">Creative Glow</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel preview-panel">
+            <div class="preview-head">
+              <div>
+                <strong>Xem trước website</strong>
+                <div style="font-size:12px;color:var(--muted);">Render trực tiếp từ JSON block-tree</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <div class="preview-badge" id="conceptBadge">Chưa áp dụng concept</div>
+                <div class="mode-switch">
+                  <button type="button" class="active" data-mode="desktop">Desktop</button>
+                  <button type="button" data-mode="mobile">Mobile</button>
+                </div>
+              </div>
+            </div>
+            <div class="preview-frame" id="previewFrame">
+              <div class="browser-shell">
+                <div class="browser-toolbar">
+                  <div class="mini-dots"><span></span><span></span><span></span></div>
+                  <div class="url" id="previewUrl">https://portfolio.local/ales-tran</div>
+                </div>
+                <div id="previewRoot"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="wrap section">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">FAQ</span>
+          <h2>Bản này khác gì bản cũ?</h2>
+        </div>
+        <p>Nó không còn xoay quanh việc chọn vài mẫu cứng. Mỗi website là một “site spec” thật sự nên bạn có thể thêm block, đổi variant và mở rộng hệ thống dễ hơn nhiều.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="card"><div class="feature-icon">❓</div><h3>Có còn template không?</h3><p>Không còn template cứng làm trung tâm. Chỉ còn block library và concept AI sinh ra.</p></article>
+        <article class="card"><div class="feature-icon">🔁</div><h3>Có thể AI redesign không?</h3><p>Có. Kiến trúc này phù hợp để thêm lệnh như “đổi hero”, “thêm testimonial” hoặc “làm sáng hơn”.</p></article>
+        <article class="card"><div class="feature-icon">📦</div><h3>Có export HTML không?</h3><p>Có. Preview và export đều render từ cùng một site spec nên dễ giữ đồng bộ.</p></article>
+        <article class="card"><div class="feature-icon">🚀</div><h3>Có deploy được không?</h3><p>Có. Đây vẫn là bộ source gọn, dùng `/api/generate` và `/api/health`, phù hợp để lên Vercel.</p></article>
+      </div>
+      <div class="footer-note">AI Site Forge • block-tree builder • xAI backend • export HTML</div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = {
+      prompt: "Tạo website cá nhân cho frontend developer, tone dark hiện đại, có hero split, stats, dự án showcase và contact split.",
+      persona: "auto",
+      style: "auto",
+      previewMode: "desktop",
+      activeConceptName: "",
+      concepts: [],
+      site: {
+        theme: {
+          primary: "#7c3aed",
+          accent: "#38bdf8",
+          background: "#07111f",
+          surface: "#10192f",
+          text: "#eef4ff",
+          muted: "#9db1d2",
+          radius: 24
+        },
+        layout: [
+          { id: "hero-1", type: "hero", variant: "split" },
+          { id: "stats-1", type: "stats", variant: "grid" },
+          { id: "about-1", type: "about", variant: "split" },
+          { id: "skills-1", type: "skills", variant: "grid" },
+          { id: "projects-1", type: "projects", variant: "showcase" },
+          { id: "experience-1", type: "experience", variant: "timeline" },
+          { id: "contact-1", type: "contact", variant: "split" }
+        ],
+        content: {
+          name: "Ales Trần",
+          title: "Frontend Developer & Product Builder",
+          tagline: "Tôi xây dựng website cá nhân hiện đại, rõ ràng và có thể chuyển đổi tốt.",
+          bio: "Tôi tập trung vào những website gọn, đẹp, có bố cục rõ và dễ phát triển tiếp về sau. Kiến trúc block-tree giúp tôi biến mỗi ý tưởng thành một site spec có thể render lại, chỉnh sửa và export ngay.",
+          ctaText: "Liên hệ ngay",
+          email: "hello@example.com",
+          phone: "+84 900 000 000",
+          location: "TP. Hồ Chí Minh",
+          website: "https://portfolio.local/ales-tran",
+          skills: ["React", "Next.js", "UI Engineering", "TypeScript", "Performance", "Design Systems"],
+          projects: [
+            { title: "AI Site Forge", description: "Builder website cá nhân dùng block-tree AI.", link: "https://portfolio.local/project-1" },
+            { title: "Launch Landing", description: "Landing page chuyển đổi cho startup công nghệ.", link: "https://portfolio.local/project-2" },
+            { title: "Creator Kit", description: "Media kit và website profile cho creator.", link: "https://portfolio.local/project-3" }
+          ],
+          experience: [
+            { role: "Frontend Developer", company: "Studio Nova", period: "2023 - Nay", description: "Xây dựng hệ thống giao diện và landing page cho sản phẩm SaaS." },
+            { role: "Freelance Web Designer", company: "Self-employed", period: "2021 - 2023", description: "Làm website cá nhân và website dịch vụ cho khách hàng cá nhân." }
+          ],
+          testimonials: [
+            { quote: "Giao diện đẹp, cấu trúc rõ và rất dễ dùng để thuyết trình năng lực cá nhân.", author: "Khách hàng demo", role: "Founder" },
+            { quote: "Cảm giác như một portfolio được thiết kế riêng chứ không phải template đóng hộp.", author: "Hiring Manager", role: "Recruitment" }
+          ],
+          stats: [
+            { value: "12+", label: "Dự án" },
+            { value: "4", label: "Năm kinh nghiệm" },
+            { value: "24h", label: "Phản hồi" }
+          ]
+        }
+      }
+    };
+
+    const blockCatalog = {
+      hero: ["split", "centered", "spotlight"],
+      stats: ["grid", "strip"],
+      about: ["card", "split"],
+      skills: ["pills", "grid"],
+      projects: ["cards", "showcase"],
+      experience: ["timeline", "cards"],
+      testimonials: ["cards"],
+      contact: ["cta", "split"]
+    };
+
+    const els = {
+      prompt: document.getElementById("prompt"),
+      persona: document.getElementById("persona"),
+      style: document.getElementById("style"),
+      generateBtn: document.getElementById("generateBtn"),
+      runtimeStatus: document.getElementById("runtimeStatus"),
+      concepts: document.getElementById("concepts"),
+      layoutList: document.getElementById("layoutList"),
+      blockChips: document.getElementById("blockChips"),
+      name: document.getElementById("name"),
+      title: document.getElementById("title"),
+      tagline: document.getElementById("tagline"),
+      ctaText: document.getElementById("ctaText"),
+      email: document.getElementById("email"),
+      phone: document.getElementById("phone"),
+      location: document.getElementById("location"),
+      website: document.getElementById("website"),
+      bio: document.getElementById("bio"),
+      skills: document.getElementById("skills"),
+      projects: document.getElementById("projects"),
+      experience: document.getElementById("experience"),
+      testimonials: document.getElementById("testimonials"),
+      stats: document.getElementById("stats"),
+      primary: document.getElementById("primary"),
+      accent: document.getElementById("accent"),
+      background: document.getElementById("background"),
+      surface: document.getElementById("surface"),
+      textColor: document.getElementById("textColor"),
+      mutedColor: document.getElementById("mutedColor"),
+      radius: document.getElementById("radius"),
+      radiusValue: document.getElementById("radiusValue"),
+      previewRoot: document.getElementById("previewRoot"),
+      previewFrame: document.getElementById("previewFrame"),
+      previewUrl: document.getElementById("previewUrl"),
+      conceptBadge: document.getElementById("conceptBadge"),
+      saveBtn: document.getElementById("saveBtn"),
+      openBtn: document.getElementById("openBtn"),
+      downloadBtn: document.getElementById("downloadBtn"),
+      toast: document.getElementById("toast")
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function slugify(text) {
+      return (text || "portfolio")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 60) || "portfolio";
+    }
+
+    function initials(name) {
+      return String(name || "AI").split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() || "").join("") || "AI";
+    }
+
+    function parseList(text) {
+      return String(text || "").split(/[\n,]/).map((item) => item.trim()).filter(Boolean);
+    }
+
+    function parseProjects(text) {
+      return String(text || "").split(/\n+/).map((line) => line.trim()).filter(Boolean).map((line, i) => {
+        const [title, description, link] = line.split("|").map((x) => (x || "").trim());
+        return { title: title || `Dự án ${i + 1}`, description: description || "Mô tả ngắn cho dự án.", link: link || "#" };
+      });
+    }
+
+    function parseExperience(text) {
+      return String(text || "").split(/\n+/).map((line) => line.trim()).filter(Boolean).map((line, i) => {
+        const [role, company, period, description] = line.split("|").map((x) => (x || "").trim());
+        return { role: role || `Vai trò ${i + 1}`, company: company || "Công ty", period: period || "2024 - Nay", description: description || "Mô tả công việc." };
+      });
+    }
+
+    function parseTestimonials(text) {
+      return String(text || "").split(/\n+/).map((line) => line.trim()).filter(Boolean).map((line, i) => {
+        const [quote, author, role] = line.split("|").map((x) => (x || "").trim());
+        return { quote: quote || "Nhận xét mẫu.", author: author || `Khách ${i + 1}`, role: role || "Client" };
+      });
+    }
+
+    function parseStats(text) {
+      return String(text || "").split(/\n+/).map((line) => line.trim()).filter(Boolean).map((line, i) => {
+        const [value, label] = line.split("|").map((x) => (x || "").trim());
+        return { value: value || `${i + 1}`, label: label || "Chỉ số" };
+      });
+    }
+
+    function toProjectsText(items) {
+      return (items || []).map((x) => [x.title, x.description, x.link].join(" | ")).join("\n");
+    }
+    function toExperienceText(items) {
+      return (items || []).map((x) => [x.role, x.company, x.period, x.description].join(" | ")).join("\n");
+    }
+    function toTestimonialsText(items) {
+      return (items || []).map((x) => [x.quote, x.author, x.role].join(" | ")).join("\n");
+    }
+    function toStatsText(items) {
+      return (items || []).map((x) => [x.value, x.label].join(" | ")).join("\n");
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => els.toast.classList.remove("show"), 2400);
+    }
+
+    function updateRuntime(kind, message) {
+      const prefix = kind === "success" ? "AI thật:" : kind === "error" ? "Lỗi:" : "Lưu ý:";
+      els.runtimeStatus.textContent = `${prefix} ${message}`;
+    }
+
+    function syncForm() {
+      els.prompt.value = state.prompt;
+      els.persona.value = state.persona;
+      els.style.value = state.style;
+      const c = state.site.content;
+      const t = state.site.theme;
+      els.name.value = c.name || "";
+      els.title.value = c.title || "";
+      els.tagline.value = c.tagline || "";
+      els.ctaText.value = c.ctaText || "";
+      els.email.value = c.email || "";
+      els.phone.value = c.phone || "";
+      els.location.value = c.location || "";
+      els.website.value = c.website || "";
+      els.bio.value = c.bio || "";
+      els.skills.value = (c.skills || []).join(", ");
+      els.projects.value = toProjectsText(c.projects);
+      els.experience.value = toExperienceText(c.experience);
+      els.testimonials.value = toTestimonialsText(c.testimonials);
+      els.stats.value = toStatsText(c.stats);
+      els.primary.value = t.primary;
+      els.accent.value = t.accent;
+      els.background.value = t.background;
+      els.surface.value = t.surface;
+      els.textColor.value = t.text;
+      els.mutedColor.value = t.muted;
+      els.radius.value = String(t.radius || 24);
+      els.radiusValue.textContent = `${t.radius || 24}px`;
+      document.querySelectorAll('.mode-switch button').forEach((btn) => btn.classList.toggle('active', btn.dataset.mode === state.previewMode));
+      saveDraft(false);
+    }
+
+    function updateStateFromForm() {
+      state.prompt = els.prompt.value;
+      state.persona = els.persona.value;
+      state.style = els.style.value;
+      state.site.content.name = els.name.value;
+      state.site.content.title = els.title.value;
+      state.site.content.tagline = els.tagline.value;
+      state.site.content.ctaText = els.ctaText.value;
+      state.site.content.email = els.email.value;
+      state.site.content.phone = els.phone.value;
+      state.site.content.location = els.location.value;
+      state.site.content.website = els.website.value;
+      state.site.content.bio = els.bio.value;
+      state.site.content.skills = parseList(els.skills.value);
+      state.site.content.projects = parseProjects(els.projects.value);
+      state.site.content.experience = parseExperience(els.experience.value);
+      state.site.content.testimonials = parseTestimonials(els.testimonials.value);
+      state.site.content.stats = parseStats(els.stats.value);
+      state.site.theme.primary = els.primary.value;
+      state.site.theme.accent = els.accent.value;
+      state.site.theme.background = els.background.value;
+      state.site.theme.surface = els.surface.value;
+      state.site.theme.text = els.textColor.value;
+      state.site.theme.muted = els.mutedColor.value;
+      state.site.theme.radius = Number(els.radius.value);
+      els.radiusValue.textContent = `${state.site.theme.radius}px`;
+      renderPreview();
+      renderLayoutList();
+      saveDraft(false);
+    }
+
+    function blockLabel(block) {
+      return `${block.type}.${block.variant}`;
+    }
+
+    function renderConcepts() {
+      if (!state.concepts.length) {
+        els.concepts.innerHTML = '<div class="concept-card"><p style="margin:0;color:var(--muted);">Nhấn “Tạo 3 concept bằng AI” để nhận site spec mới từ backend.</p></div>';
+        return;
+      }
+      els.concepts.innerHTML = state.concepts.map((concept, index) => {
+        const theme = concept.site.theme || {};
+        const layout = concept.site.layout || [];
+        return `
+          <article class="concept-card">
+            <div class="concept-top">
+              <div class="concept-title">
+                <strong>${escapeHtml(concept.name)}</strong>
+                <span>${escapeHtml(concept.summary)}</span>
+              </div>
+              <div class="swatches">
+                <span style="background:${escapeHtml(theme.background || '#000')}"></span>
+                <span style="background:${escapeHtml(theme.primary || '#000')}"></span>
+                <span style="background:${escapeHtml(theme.accent || '#000')}"></span>
+              </div>
+            </div>
+            <div class="badges">${layout.map((block) => `<span class="badge">${escapeHtml(blockLabel(block))}</span>`).join('')}</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="button" type="button" data-apply-concept="${index}">Áp dụng concept</button>
+              <button class="ghost" type="button" data-preview-concept="${index}">Xem nhanh</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      els.concepts.querySelectorAll('[data-apply-concept]').forEach((btn) => {
+        btn.addEventListener('click', () => applyConcept(state.concepts[Number(btn.dataset.applyConcept)], true));
+      });
+      els.concepts.querySelectorAll('[data-preview-concept]').forEach((btn) => {
+        btn.addEventListener('click', () => applyConcept(state.concepts[Number(btn.dataset.previewConcept)], false));
+      });
+    }
+
+    function applyConcept(concept, persist = true) {
+      if (!concept?.site) return;
+      state.site = JSON.parse(JSON.stringify(concept.site));
+      state.activeConceptName = concept.name || '';
+      syncForm();
+      renderAll();
+      if (persist) showToast(`Đã áp dụng concept “${concept.name}”.`);
+      else showToast(`Đã xem nhanh concept “${concept.name}”.`);
+    }
+
+    function renderLayoutList() {
+      els.layoutList.innerHTML = state.site.layout.map((block, index) => `
+        <div class="layout-item">
+          <div>
+            <strong>${escapeHtml(block.type)}</strong>
+            <span>${escapeHtml(block.variant)}</span>
+          </div>
+          <div class="layout-actions">
+            <button class="icon-btn" data-up="${index}" title="Lên">↑</button>
+            <button class="icon-btn" data-down="${index}" title="Xuống">↓</button>
+            <button class="icon-btn" data-variant="${index}" title="Đổi variant">⟳</button>
+            <button class="icon-btn" data-remove="${index}" title="Xóa">✕</button>
+          </div>
+        </div>
+      `).join('');
+
+      els.layoutList.querySelectorAll('[data-up]').forEach((btn) => btn.addEventListener('click', () => moveBlock(Number(btn.dataset.up), -1)));
+      els.layoutList.querySelectorAll('[data-down]').forEach((btn) => btn.addEventListener('click', () => moveBlock(Number(btn.dataset.down), 1)));
+      els.layoutList.querySelectorAll('[data-remove]').forEach((btn) => btn.addEventListener('click', () => removeBlock(Number(btn.dataset.remove))));
+      els.layoutList.querySelectorAll('[data-variant]').forEach((btn) => btn.addEventListener('click', () => cycleVariant(Number(btn.dataset.variant))));
+    }
+
+    function moveBlock(index, delta) {
+      const next = index + delta;
+      if (next < 0 || next >= state.site.layout.length) return;
+      const arr = [...state.site.layout];
+      [arr[index], arr[next]] = [arr[next], arr[index]];
+      state.site.layout = arr;
+      renderAll();
+      saveDraft(false);
+    }
+
+    function removeBlock(index) {
+      state.site.layout.splice(index, 1);
+      renderAll();
+      saveDraft(false);
+    }
+
+    function cycleVariant(index) {
+      const block = state.site.layout[index];
+      if (!block) return;
+      const variants = blockCatalog[block.type] || [block.variant];
+      const current = variants.indexOf(block.variant);
+      block.variant = variants[(current + 1) % variants.length];
+      renderAll();
+      saveDraft(false);
+    }
+
+    function renderBlockChips() {
+      const entries = Object.entries(blockCatalog).map(([type, variants]) => ({ type, variant: variants[0] }));
+      els.blockChips.innerHTML = entries.map((entry) => `<button class="chip" type="button" data-add-block="${entry.type}|${entry.variant}">${entry.type}.${entry.variant}</button>`).join('');
+      els.blockChips.querySelectorAll('[data-add-block]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const [type, variant] = btn.dataset.addBlock.split('|');
+          state.site.layout.push({ id: `${type}-${Date.now()}`, type, variant });
+          renderAll();
+          saveDraft(false);
+          showToast(`Đã thêm block ${type}.${variant}.`);
+        });
+      });
+    }
+
+    function renderSite(site) {
+      const theme = site.theme || {};
+      const content = site.content || {};
+      const layout = site.layout || [];
+      const url = content.website || `https://portfolio.local/${slugify(content.name)}`;
+      els.previewUrl.textContent = url;
+      els.conceptBadge.textContent = state.activeConceptName ? `Concept: ${state.activeConceptName}` : 'Concept: custom';
+
+      const renderers = {
+        hero: {
+          split: () => `
+            <section class="site-box hero-block split">
+              <div>
+                <span class="pill">${escapeHtml(content.title || 'Portfolio')}</span>
+                <h1>${escapeHtml(content.name || 'Tên của bạn')}</h1>
+                <div class="site-title">${escapeHtml(content.title || '')}</div>
+                <p class="site-muted">${escapeHtml(content.tagline || '')}</p>
+                <div class="chip-row">
+                  <span>📍 ${escapeHtml(content.location || '')}</span>
+                  <span>✉ ${escapeHtml(content.email || '')}</span>
+                  <span>⚙ ${(content.skills || []).length} kỹ năng</span>
+                </div>
+                <div class="cta-row">
+                  <a class="cta-primary" href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(content.ctaText || 'Xem thêm')}</a>
+                  <a class="cta-secondary" href="mailto:${escapeHtml(content.email || '')}">Liên hệ</a>
+                </div>
+              </div>
+              <aside class="profile-card">
+                <div class="avatar-lg">${escapeHtml(initials(content.name))}</div>
+                <div class="profile-lines">
+                  <div>🏷 ${escapeHtml(content.title || '')}</div>
+                  <div>📍 ${escapeHtml(content.location || '')}</div>
+                  <div>📞 ${escapeHtml(content.phone || '')}</div>
+                </div>
+                <div class="socials">
+                  <span class="meta-pill">in</span>
+                  <span class="meta-pill">gh</span>
+                  <span class="meta-pill">fb</span>
+                </div>
+              </aside>
+            </section>`,
+          centered: () => `
+            <section class="site-box hero-block centered">
+              <span class="pill">${escapeHtml(content.title || 'Portfolio')}</span>
+              <h1>${escapeHtml(content.name || 'Tên của bạn')}</h1>
+              <div class="site-title">${escapeHtml(content.title || '')}</div>
+              <p class="site-muted" style="max-width:720px;margin:0 auto;">${escapeHtml(content.tagline || '')}</p>
+              <div class="chip-row" style="justify-content:center;">
+                <span>📍 ${escapeHtml(content.location || '')}</span>
+                <span>✉ ${escapeHtml(content.email || '')}</span>
+              </div>
+              <div class="cta-row" style="justify-content:center;">
+                <a class="cta-primary" href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(content.ctaText || 'Xem thêm')}</a>
+                <a class="cta-secondary" href="mailto:${escapeHtml(content.email || '')}">Liên hệ</a>
+              </div>
+            </section>`,
+          spotlight: () => `
+            <section class="site-box hero-block spotlight">
+              <span class="pill">Creative Profile</span>
+              <h1>${escapeHtml(content.name || 'Tên của bạn')}</h1>
+              <div class="site-title">${escapeHtml(content.title || '')}</div>
+              <p class="site-muted" style="max-width:760px;">${escapeHtml(content.tagline || '')}</p>
+              <div class="cta-row">
+                <a class="cta-primary" href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(content.ctaText || 'Xem thêm')}</a>
+                <a class="cta-secondary" href="mailto:${escapeHtml(content.email || '')}">Liên hệ</a>
+              </div>
+            </section>`
+        },
+        stats: {
+          grid: () => `<section class="stats-grid grid">${(content.stats || []).map((item) => `<div class="stat-card"><strong>${escapeHtml(item.value)}</strong><span class="site-muted">${escapeHtml(item.label)}</span></div>`).join('')}</section>`,
+          strip: () => `<section class="stats-grid strip">${(content.stats || []).map((item) => `<div class="stat-card"><strong>${escapeHtml(item.value)}</strong><span class="site-muted">${escapeHtml(item.label)}</span></div>`).join('')}</section>`
+        },
+        about: {
+          card: () => `<section class="site-box content-block about-card"><div class="block-head"><h3>Giới thiệu</h3><p>Tổng quan cá nhân</p></div><p>${escapeHtml(content.bio || '')}</p></section>`,
+          split: () => `<section class="site-box content-block about-split"><div><div class="block-head"><h3>Giới thiệu</h3><p>Câu chuyện cá nhân</p></div><p>${escapeHtml(content.bio || '')}</p></div><div class="profile-card"><div class="avatar-lg">${escapeHtml(initials(content.name))}</div><div class="profile-lines"><div>📍 ${escapeHtml(content.location || '')}</div><div>✉ ${escapeHtml(content.email || '')}</div><div>📞 ${escapeHtml(content.phone || '')}</div></div></div></section>`
+        },
+        skills: {
+          pills: () => `<section class="site-box content-block"><div class="block-head"><h3>Kỹ năng</h3><p>Năng lực nổi bật</p></div><div class="skills-pills">${(content.skills || []).map((item) => `<span class="skill-pill">${escapeHtml(item)}</span>`).join('')}</div></section>`,
+          grid: () => `<section class="site-box content-block"><div class="block-head"><h3>Kỹ năng</h3><p>Năng lực nổi bật</p></div><div class="skills-grid">${(content.skills || []).map((item) => `<span class="skill-pill">${escapeHtml(item)}</span>`).join('')}</div></section>`
+        },
+        projects: {
+          cards: () => `<section class="site-box content-block"><div class="block-head"><h3>Dự án</h3><p>Một số dự án nổi bật</p></div><div class="projects-cards">${(content.projects || []).map((item) => `<article class="project-card"><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.description)}</p><a href="${escapeHtml(item.link || '#')}" target="_blank" rel="noopener">Xem chi tiết ↗</a></article>`).join('')}</div></section>`,
+          showcase: () => `<section class="site-box content-block"><div class="block-head"><h3>Case Studies</h3><p>Dự án theo kiểu showcase</p></div><div class="projects-showcase">${(content.projects || []).map((item) => `<article class="project-card"><span class="meta-pill">Featured</span><h4>${escapeHtml(item.title)}</h4><p>${escapeHtml(item.description)}</p><a href="${escapeHtml(item.link || '#')}" target="_blank" rel="noopener">Xem chi tiết ↗</a></article>`).join('')}</div></section>`
+        },
+        experience: {
+          timeline: () => `<section class="site-box content-block"><div class="block-head"><h3>Kinh nghiệm</h3><p>Timeline công việc</p></div><div class="experience-timeline">${(content.experience || []).map((item) => `<div class="timeline-item"><div class="site-muted">${escapeHtml(item.period)}</div><div><h4 style="margin:0 0 8px;">${escapeHtml(item.role)} • ${escapeHtml(item.company)}</h4><p class="site-muted" style="margin:0;">${escapeHtml(item.description)}</p></div></div>`).join('')}</div></section>`,
+          cards: () => `<section class="site-box content-block"><div class="block-head"><h3>Kinh nghiệm</h3><p>Những cột mốc chính</p></div><div class="projects-showcase">${(content.experience || []).map((item) => `<article class="exp-card"><span class="meta-pill">${escapeHtml(item.period)}</span><h4>${escapeHtml(item.role)} • ${escapeHtml(item.company)}</h4><p>${escapeHtml(item.description)}</p></article>`).join('')}</div></section>`
+        },
+        testimonials: {
+          cards: () => `<section class="site-box content-block"><div class="block-head"><h3>Testimonials</h3><p>Nhận xét nổi bật</p></div><div class="testimonials-cards">${(content.testimonials || []).map((item) => `<article class="testimonial-card"><p>“${escapeHtml(item.quote)}”</p><h4>${escapeHtml(item.author)}</h4><span class="site-muted">${escapeHtml(item.role)}</span></article>`).join('')}</div></section>`
+        },
+        contact: {
+          cta: () => `<section class="site-box content-block contact-cta"><div><div class="block-head" style="margin-bottom:8px;"><h3>Liên hệ</h3><p>Sẵn sàng kết nối</p></div><p class="site-muted" style="margin:0;">Dùng block này để chốt lead, nhận liên hệ tuyển dụng hoặc mời hợp tác.</p></div><div class="contact-links"><a class="cta-primary" href="mailto:${escapeHtml(content.email || '')}">${escapeHtml(content.email || 'Email')}</a><a class="cta-secondary" href="tel:${escapeHtml((content.phone || '').replace(/\s+/g,''))}">${escapeHtml(content.phone || 'Phone')}</a></div></section>`,
+          split: () => `<section class="site-box content-block contact-split"><div><div class="block-head"><h3>Liên hệ</h3><p>Sẵn sàng cho cơ hội mới</p></div><p class="site-muted" style="margin:0;">Bạn có thể dùng phần này như CTA cuối để nhận lời mời hợp tác hoặc tuyển dụng.</p></div><div class="contact-links"><a class="cta-secondary" href="mailto:${escapeHtml(content.email || '')}">✉ ${escapeHtml(content.email || '')}</a><a class="cta-secondary" href="tel:${escapeHtml((content.phone || '').replace(/\s+/g,''))}">📞 ${escapeHtml(content.phone || '')}</a><a class="cta-secondary" href="${escapeHtml(url)}" target="_blank" rel="noopener">🔗 Portfolio</a></div></section>`
+        }
+      };
+
+      const blocksHtml = layout.map((block) => {
+        const renderer = renderers?.[block.type]?.[block.variant];
+        return renderer ? renderer() : '';
+      }).join('');
+
+      return `
+        <div class="site" style="--site-primary:${escapeHtml(theme.primary)};--site-accent:${escapeHtml(theme.accent)};--site-bg:${escapeHtml(theme.background)};--site-surface:${escapeHtml(theme.surface)};--site-text:${escapeHtml(theme.text)};--site-muted:${escapeHtml(theme.muted)};--site-radius:${escapeHtml(String(theme.radius || 24))}px;">
+          <div class="site-wrap">${blocksHtml}</div>
+        </div>
+      `;
+    }
+
+    function renderPreview() {
+      els.previewRoot.innerHTML = renderSite(state.site);
+      els.previewFrame.classList.toggle('mobile', state.previewMode === 'mobile');
+    }
+
+    function buildExportHtml() {
+      const siteMarkup = renderSite(state.site);
+      const t = state.site.theme;
+      return `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>${escapeHtml(state.site.content.name)} • ${escapeHtml(state.site.content.title)}</title><meta name="description" content="${escapeHtml(state.site.content.tagline)}" /><style>body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:${escapeHtml(t.background)};color:${escapeHtml(t.text)}}a{text-decoration:none;color:inherit}${document.querySelector('style').innerHTML}</style></head><body>${siteMarkup}</body></html>`;
+    }
+
+    function downloadHtml() {
+      const blob = new Blob([buildExportHtml()], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${slugify(state.site.content.name)}.html`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast('Đã tải file HTML.');
+    }
+
+    function openPortfolio() {
+      const blob = new Blob([buildExportHtml()], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener');
+      setTimeout(() => URL.revokeObjectURL(url), 120000);
+      showToast('Đã mở portfolio ở tab mới.');
+    }
+
+    function saveDraft(showMessage = true) {
+      localStorage.setItem('ai-site-forge-level3', JSON.stringify(state));
+      if (showMessage) showToast('Đã lưu bản nháp.');
+    }
+
+    function loadDraft() {
+      try {
+        const raw = localStorage.getItem('ai-site-forge-level3');
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return;
+        Object.assign(state, parsed);
+      } catch (error) {
+        console.error('Load draft failed:', error);
+      }
+    }
+
+    async function checkHealth() {
+      try {
+        const res = await fetch('/api/health', { headers: { Accept: 'application/json' } });
+        if (!res.ok) throw new Error('Health check failed');
+        const data = await res.json();
+        if (data?.hasApiKey) {
+          updateRuntime('success', `Backend AI đã sẵn sàng${data.model ? ' • ' + data.model : ''}.`);
+        } else {
+          updateRuntime('warning', 'Chưa cấu hình XAI_API_KEY. Hệ thống sẽ fallback sang concept local demo.');
+        }
+      } catch (error) {
+        updateRuntime('warning', 'Không kiểm tra được backend AI. Hệ thống sẽ dùng fallback nếu cần.');
+      }
+    }
+
+    function setGenerateLoading(loading) {
+      els.generateBtn.disabled = !!loading;
+      els.generateBtn.textContent = loading ? 'AI đang tạo...' : 'Tạo 3 concept bằng AI';
+    }
+
+    async function generateConcepts() {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          prompt: state.prompt,
+          persona: state.persona,
+          style: state.style,
+          profile: state.site.content
+        })
+      });
+      const text = await response.text();
+      let data = {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error('Server không trả JSON hợp lệ.');
+      }
+      if (!response.ok) throw new Error(data?.error || 'Không gọi được AI backend.');
+      if (!Array.isArray(data?.concepts) || !data.concepts.length) throw new Error('AI không trả về concept hợp lệ.');
+      return data;
+    }
+
+    function renderAll() {
+      syncForm();
+      renderConcepts();
+      renderLayoutList();
+      renderBlockChips();
+      renderPreview();
+    }
+
+    function bindTabs() {
+      document.querySelectorAll('.tab-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach((btn) => btn.classList.remove('active'));
+          document.querySelectorAll('.tab-panel').forEach((panel) => panel.classList.remove('active'));
+          button.classList.add('active');
+          document.querySelector(`[data-panel="${button.dataset.tab}"]`)?.classList.add('active');
+        });
+      });
+    }
+
+    function bindInputs() {
+      [els.prompt, els.persona, els.style, els.name, els.title, els.tagline, els.ctaText, els.email, els.phone, els.location, els.website, els.bio, els.skills, els.projects, els.experience, els.testimonials, els.stats, els.primary, els.accent, els.background, els.surface, els.textColor, els.mutedColor, els.radius].forEach((el) => el.addEventListener('input', updateStateFromForm));
+      document.querySelectorAll('.mode-switch button').forEach((btn) => btn.addEventListener('click', () => {
+        state.previewMode = btn.dataset.mode;
+        document.querySelectorAll('.mode-switch button').forEach((x) => x.classList.toggle('active', x === btn));
+        renderPreview();
+        saveDraft(false);
+      }));
+      document.getElementById('promptChips').querySelectorAll('[data-prompt]').forEach((btn) => btn.addEventListener('click', () => {
+        state.prompt = btn.dataset.prompt;
+        syncForm();
+        els.generateBtn.click();
+      }));
+      document.querySelectorAll('.preset').forEach((btn) => btn.addEventListener('click', () => {
+        state.site.theme.primary = btn.dataset.primary;
+        state.site.theme.accent = btn.dataset.accent;
+        state.site.theme.background = btn.dataset.bg;
+        state.site.theme.surface = btn.dataset.surface;
+        state.site.theme.text = btn.dataset.text;
+        state.site.theme.muted = btn.dataset.muted;
+        renderAll();
+        showToast('Đã áp dụng preset màu.');
+      }));
+      els.generateBtn.addEventListener('click', async () => {
+        updateStateFromForm();
+        setGenerateLoading(true);
+        try {
+          const payload = await generateConcepts();
+          state.concepts = payload.concepts;
+          renderConcepts();
+          if (state.concepts[0]) applyConcept(state.concepts[0], false);
+          updateRuntime('success', `Đã nhận ${state.concepts.length} concept từ backend AI${payload?.meta?.model ? ' • ' + payload.meta.model : ''}.`);
+          showToast('AI đã tạo concept mới.');
+        } catch (error) {
+          console.error(error);
+          updateRuntime('warning', `${error?.message || 'Không gọi được AI backend.'} Đang dùng concept fallback/local.`);
+          showToast('Không gọi được AI backend, hệ thống vẫn dùng concept local.');
+        } finally {
+          setGenerateLoading(false);
+          saveDraft(false);
+        }
+      });
+      els.saveBtn.addEventListener('click', () => saveDraft(true));
+      els.downloadBtn.addEventListener('click', downloadHtml);
+      els.openBtn.addEventListener('click', openPortfolio);
+    }
+
+    function init() {
+      loadDraft();
+      bindTabs();
+      bindInputs();
+      renderAll();
+      checkHealth();
+    }
+
+    init();
+  </script>
+</body>
+</html>
